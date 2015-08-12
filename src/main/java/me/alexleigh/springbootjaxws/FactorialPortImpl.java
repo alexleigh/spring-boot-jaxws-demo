@@ -2,10 +2,16 @@ package me.alexleigh.springbootjaxws;
 
 import me.alexleigh.demo.service.FactorialFault;
 import me.alexleigh.demo.service.FactorialPort;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @javax.jws.WebService (endpointInterface="me.alexleigh.demo.service.FactorialPort")
-public class FactorialImpl implements FactorialPort {
-    
+@Component
+public class FactorialPortImpl implements FactorialPort {
+
+    @Autowired
+    private NumberService numberService;
+
     public int factorial(int number) throws FactorialFault {
         if (number < 0) {
             String message = "Number cannot be negative.";
@@ -16,10 +22,6 @@ public class FactorialImpl implements FactorialPort {
             throw new FactorialFault(message, fault);
         }
 
-        return doFactorial(number);
-    }
-
-    private int doFactorial(int number) {
-        return number <= 1 ? 1 : number * doFactorial(number - 1);
+        return numberService.factorial(number);
     }
 }

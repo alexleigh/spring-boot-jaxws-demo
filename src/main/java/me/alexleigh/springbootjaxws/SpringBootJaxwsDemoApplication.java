@@ -1,7 +1,10 @@
 package me.alexleigh.springbootjaxws;
 
 import com.sun.xml.ws.transport.http.servlet.SpringBinding;
+import me.alexleigh.demo.service.FactorialPort;
+import me.alexleigh.demo.service.FibonacciPort;
 import org.jvnet.jax_ws_commons.spring.SpringService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.ServletRegistrationBean;
@@ -27,6 +30,12 @@ public class SpringBootJaxwsDemoApplication {
         DEMOSERVICE_WSDL_LOCATION = DEMOSERVICE_METADATA.get(0);
     }
 
+    @Autowired
+    private FibonacciPort fibonacciPort;
+
+    @Autowired
+    private FactorialPort factorialPort;
+
     public static void main(String[] args) {
         SpringApplication.run(SpringBootJaxwsDemoApplication.class, args);
     }
@@ -44,7 +53,7 @@ public class SpringBootJaxwsDemoApplication {
     @Bean
     public SpringService fibonacciService() throws IOException {
         SpringService service = new SpringService();
-        service.setImpl(FibonacciImpl.class);
+        service.setBean(fibonacciPort);
         service.setServiceName(new QName("http://www.alexleigh.me/demo", "DemoService"));
         service.setPortName(new QName("http://www.alexleigh.me/demo", "FibonacciPort"));
         service.setMetadata(DEMOSERVICE_METADATA);
@@ -55,7 +64,7 @@ public class SpringBootJaxwsDemoApplication {
     @Bean
     public SpringService factorialService() throws IOException {
         SpringService service = new SpringService();
-        service.setImpl(FactorialImpl.class);
+        service.setBean(factorialPort);
         service.setServiceName(new QName("http://www.alexleigh.me/demo", "DemoService"));
         service.setPortName(new QName("http://www.alexleigh.me/demo", "FactorialPort"));
         service.setMetadata(DEMOSERVICE_METADATA);

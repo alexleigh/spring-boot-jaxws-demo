@@ -2,9 +2,15 @@ package me.alexleigh.springbootjaxws;
 
 import me.alexleigh.demo.service.FibonacciFault;
 import me.alexleigh.demo.service.FibonacciPort;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @javax.jws.WebService (endpointInterface="me.alexleigh.demo.service.FibonacciPort")
-public class FibonacciImpl implements FibonacciPort {
+@Component
+public class FibonacciPortImpl implements FibonacciPort {
+
+    @Autowired
+    private NumberService numberService;
     
     public int fibonacci(int index) throws FibonacciFault {
         if (index < 0) {
@@ -16,16 +22,6 @@ public class FibonacciImpl implements FibonacciPort {
             throw new FibonacciFault(message, fault);
         }
 
-        return doFibonacci(index);
-    }
-
-    private int doFibonacci(int index) {
-        if (index == 0) {
-            return 0;
-        }
-        if (index == 1) {
-            return 1;
-        }
-        return doFibonacci(index - 1) + doFibonacci(index - 2);
+        return numberService.fibonacci(index);
     }
 }
