@@ -1,0 +1,102 @@
+buildscript {
+    ext {
+        springBootVersion = '1.2.5.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}") 
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'spring-boot'
+
+ext {
+    generatedDir = 'src/generated'
+    generatedSourcesDir = "${generatedDir}/java"
+}
+
+configurations {
+    wsimport
+    compile.exclude group: 'javax.servlet', module: 'servlet-api'
+}
+
+jar {
+    baseName = 'spring-boot-jaxws-demo'
+    version = '0.0.1-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+def spring = 'org.springframework.boot:spring-boot-starter-web'
+def springTest = 'org.springframework.boot:spring-boot-starter-test'
+def jax = [
+        'javax.xml.bind:jaxb-api:2.2.12',
+        'javax.xml.ws:jaxws-api:2.2.11',
+        'com.sun.xml.bind:jaxb-core:2.2.11',
+        'com.sun.xml.bind:jaxb-impl:2.2.11',
+        'com.sun.xml.ws:jaxws-rt:2.2.10',
+        'org.jvnet.jax-ws-commons.spring:jaxws-spring:1.9'
+]
+def wsimportDependencies = 'com.sun.xml.ws:jaxws-tools:2.2.10'
+
+dependencies {
+    compile spring, jax
+    testCompile springTest
+    wsimport wsimportDependencies
+}
+
+bootRun { task ->
+    if (project.hasProperty('args')) {
+        args project.args.split('\\s+')
+    }
+}
+
+task generateSources {
+    ext.wsdlFile = "src/main/resources/wsdl/DemoService.wsdl"
+    ext.wsdlLocation = "/wsdl/DemoService.wsdl"
+    ext.bindingDir = "src/main/resources/xjb"
+
+    doLast {
+        ant {
+            taskdef name: "wsimport",
+                    classname: "com.sun.tools.ws.ant.WsImport",
+                    classpath: configurations.wsimport.asPath
+
+            mkdir(dir: generatedSourcesDir)
+
+            wsimport(sourcedestdir: generatedSourcesDir,
+                     wsdl: wsdlFile,
+                     wsdlLocation: wsdlLocation,
+                     keep: true,
+                     xnocompile: true) {
+                binding(dir: bindingDir, includes: "*.xjb")
+            }
+        }
+    }
+}
+
+task cleanGenerated(type: Delete) {
+    delete generatedDir
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
+
+clean.dependsOn cleanGenerated
+compileJava {
+    dependsOn generateSources
+    source generatedSourcesDir
+}
+
+applicationDefaultJvmArgs = [
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+]

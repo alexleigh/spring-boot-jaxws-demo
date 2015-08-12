@@ -1,0 +1,13 @@
+*.class
+*.iml
+*.ipr
+*.iws
+
+.gradle
+.idea
+.project
+.classpath
+.settings
+
+/build
+/src/generated
