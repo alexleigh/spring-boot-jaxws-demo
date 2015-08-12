@@ -13,21 +13,21 @@ import org.springframework.context.annotation.Bean;
 import javax.servlet.Servlet;
 import javax.xml.namespace.QName;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
 
 @SpringBootApplication
 public class SpringBootJaxwsDemoApplication {
 
-    private static final List<Object> DEMOSERVICE_METADATA;
-    private static final Object DEMOSERVICE_WSDL_LOCATION;
+    private static final Collection<Object> DEMOSERVICE_METADATA;
+    private static final Object DEMOSERVICE_PRIMARY_WSDL;
 
     static {
-        DEMOSERVICE_METADATA = Arrays.asList(
-                SpringBootJaxwsDemoApplication.class.getResource("/wsdl/DemoService.wsdl"),
-                SpringBootJaxwsDemoApplication.class.getResource("/xsd/Fibonacci.xsd"),
-                SpringBootJaxwsDemoApplication.class.getResource("/xsd/Factorial.xsd"));
-        DEMOSERVICE_WSDL_LOCATION = DEMOSERVICE_METADATA.get(0);
+        ClassLoader cl = SpringBootJaxwsDemoApplication.class.getClassLoader();
+        Map<URL, Object> docs = SDDocumentCollector.collectDocs("", cl);
+        DEMOSERVICE_METADATA = docs.values();
+        DEMOSERVICE_PRIMARY_WSDL = docs.get(cl.getResource("wsdl/DemoService.wsdl"));
     }
 
     @Autowired
@@ -57,7 +57,7 @@ public class SpringBootJaxwsDemoApplication {
         service.setServiceName(new QName("http://www.alexleigh.me/demo", "DemoService"));
         service.setPortName(new QName("http://www.alexleigh.me/demo", "FibonacciPort"));
         service.setMetadata(DEMOSERVICE_METADATA);
-        service.setPrimaryWsdl(DEMOSERVICE_WSDL_LOCATION);
+        service.setPrimaryWsdl(DEMOSERVICE_PRIMARY_WSDL);
         return service;
     }
 
@@ -68,7 +68,7 @@ public class SpringBootJaxwsDemoApplication {
         service.setServiceName(new QName("http://www.alexleigh.me/demo", "DemoService"));
         service.setPortName(new QName("http://www.alexleigh.me/demo", "FactorialPort"));
         service.setMetadata(DEMOSERVICE_METADATA);
-        service.setPrimaryWsdl(DEMOSERVICE_WSDL_LOCATION);
+        service.setPrimaryWsdl(DEMOSERVICE_PRIMARY_WSDL);
         return service;
     }
 
