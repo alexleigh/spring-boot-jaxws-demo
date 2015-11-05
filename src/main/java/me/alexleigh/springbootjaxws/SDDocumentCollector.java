@@ -3,16 +3,18 @@ package me.alexleigh.springbootjaxws;
 import com.sun.xml.ws.api.server.SDDocumentSource;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Enumeration;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 
 public class SDDocumentCollector {
 
@@ -35,7 +37,23 @@ public class SDDocumentCollector {
                 } catch (URISyntaxException e) {
                     jarUrlString = url.getPath();
                 }
-                collectJar(jarUrlString, docs);
+
+                String[] pathParts = jarUrlString.split("!");
+                if (pathParts.length >= 2) {
+                    try {
+                        File file;
+                        try {
+                            file = new File(new URI(pathParts[0]));
+                        } catch (URISyntaxException e) {
+                            file = new File(pathParts[0]);
+                        }
+                        InputStream inputStream = new FileInputStream(file);
+                        String jarPathUrlString = jarUrlString.substring(0, jarUrlString.lastIndexOf('!'));
+                        collectJar(inputStream, pathParts, jarPathUrlString, docs);
+                    } catch (IOException e) {
+                        // do nothing
+                    }
+                }
             }
         }
         return docs;
@@ -62,27 +80,42 @@ public class SDDocumentCollector {
         }
     }
 
-    private static void collectJar(String jarUrlString, Map<URL, Object> docs) {
-        String jarPathUrlString = jarUrlString.substring(0, jarUrlString.lastIndexOf('!'));
-        String jarPath = jarPathUrlString.substring(5);
-        String dirPath = jarUrlString.substring(jarUrlString.lastIndexOf('!') + 2);
+    private static void collectJar(
+            InputStream inputStream,
+            String[] pathParts,
+            String jarPathUrlString,
+            Map<URL, Object> docs) {
+        String nextPathPart = stripLeadingSlash(pathParts[1]);
+
         try {
-            JarFile jar = new JarFile(jarPath);
-            Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                if (!entry.isDirectory()) {
-                    String name = entry.getName();
-                    if (name.startsWith(dirPath)) {
-                        String extension = getExtension(name);
-                        if ("wsdl".equals(extension) || "xsd".equals(extension)) {
-                            String urlString = jarPathUrlString + "!/" + name;
-                            try {
-                                URL url = new URI("jar", urlString, null).toURL();
-                                docs.put(url, SDDocumentSource.create(url));
-                            } catch (URISyntaxException | MalformedURLException e) {
-                                // do nothing
+            JarInputStream jarInputStream = new JarInputStream(inputStream);
+            JarEntry entry;
+            if (pathParts.length == 2) {
+                while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                    if (!entry.isDirectory()) {
+                        String name = entry.getName();
+                        if (name.startsWith(nextPathPart)) {
+                            String extension = getExtension(name);
+                            if ("wsdl".equals(extension) || "xsd".equals(extension)) {
+                                String urlString = jarPathUrlString + "!/" + name;
+                                try {
+                                    URL url = new URI("jar", urlString, null).toURL();
+                                    docs.put(url, SDDocumentSource.create(url));
+                                } catch (URISyntaxException | MalformedURLException e) {
+                                    // do nothing
+                                }
                             }
+                        }
+                    }
+                }
+            } else {
+                while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                    if (!entry.isDirectory()) {
+                        String name = entry.getName();
+                        if (name.equals(nextPathPart)) {
+                            String[] subPathParts = Arrays.copyOfRange(pathParts, 1, pathParts.length);
+                            collectJar(jarInputStream, subPathParts, jarPathUrlString, docs);
+                            break;
                         }
                     }
                 }
@@ -98,5 +131,13 @@ public class SDDocumentCollector {
             return name.substring(index + 1);
         }
         return "";
+    }
+
+    private static String stripLeadingSlash(String input) {
+        if (input.startsWith("/")) {
+            return input.substring(1);
+        } else {
+            return input;
+        }
     }
 }
