@@ -5,7 +5,9 @@ import me.alexleigh.demo.service.FactorialPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@javax.jws.WebService (endpointInterface="me.alexleigh.demo.service.FactorialPort")
+import javax.jws.WebService;
+
+@WebService(endpointInterface = "me.alexleigh.demo.service.FactorialPort")
 @Component
 public class FactorialPortImpl implements FactorialPort {
 

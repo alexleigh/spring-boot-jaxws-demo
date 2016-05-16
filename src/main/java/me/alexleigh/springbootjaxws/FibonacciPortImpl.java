@@ -5,7 +5,9 @@ import me.alexleigh.demo.service.FibonacciPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@javax.jws.WebService (endpointInterface="me.alexleigh.demo.service.FibonacciPort")
+import javax.jws.WebService;
+
+@WebService(endpointInterface = "me.alexleigh.demo.service.FibonacciPort")
 @Component
 public class FibonacciPortImpl implements FibonacciPort {
 

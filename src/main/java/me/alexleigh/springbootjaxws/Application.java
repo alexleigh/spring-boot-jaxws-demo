@@ -1,9 +1,11 @@
 package me.alexleigh.springbootjaxws;
 
+import com.revinate.ws.spring.SDDocumentCollector;
+import com.revinate.ws.spring.SpringService;
 import com.sun.xml.ws.transport.http.servlet.SpringBinding;
+import com.sun.xml.ws.transport.http.servlet.WSSpringServlet;
 import me.alexleigh.demo.service.FactorialPort;
 import me.alexleigh.demo.service.FibonacciPort;
-import org.jvnet.jax_ws_commons.spring.SpringService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,16 +20,16 @@ import java.util.Collection;
 import java.util.Map;
 
 @SpringBootApplication
-public class SpringBootJaxwsDemoApplication {
+public class Application {
 
     private static final Collection<Object> DEMOSERVICE_METADATA;
     private static final Object DEMOSERVICE_PRIMARY_WSDL;
 
     static {
-        ClassLoader cl = SpringBootJaxwsDemoApplication.class.getClassLoader();
-        Map<URL, Object> docs = SDDocumentCollector.collectDocs("", cl);
+        ClassLoader cl = Application.class.getClassLoader();
+        Map<URL, Object> docs = SDDocumentCollector.collectDocs("demo", cl);
         DEMOSERVICE_METADATA = docs.values();
-        DEMOSERVICE_PRIMARY_WSDL = docs.get(cl.getResource("wsdl/DemoService.wsdl"));
+        DEMOSERVICE_PRIMARY_WSDL = docs.get(cl.getResource("demo/wsdl/DemoService.wsdl"));
     }
 
     @Autowired
@@ -37,7 +39,7 @@ public class SpringBootJaxwsDemoApplication {
     private FactorialPort factorialPort;
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringBootJaxwsDemoApplication.class, args);
+        SpringApplication.run(Application.class, args);
     }
 
     @Bean

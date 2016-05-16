@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '1.2.5.RELEASE'
+        springBootVersion = '1.3.5.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -20,37 +20,33 @@ ext {
 
 configurations {
     wsimport
-    compile.exclude group: 'javax.servlet', module: 'servlet-api'
 }
 
 jar {
     baseName = 'spring-boot-jaxws-demo'
-    version = '0.0.1-SNAPSHOT'
+    version = '0.0.2-SNAPSHOT'
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 repositories {
     mavenCentral()
 }
 
-def spring = 'org.springframework.boot:spring-boot-starter-web'
-def springTest = 'org.springframework.boot:spring-boot-starter-test'
-def jax = [
-        'javax.xml.bind:jaxb-api:2.2.12',
-        'javax.xml.ws:jaxws-api:2.2.11',
-        'com.sun.xml.bind:jaxb-core:2.2.11',
-        'com.sun.xml.bind:jaxb-impl:2.2.11',
-        'com.sun.xml.ws:jaxws-rt:2.2.10',
-        'org.jvnet.jax-ws-commons.spring:jaxws-spring:1.9'
-]
-def wsimportDependencies = 'com.sun.xml.ws:jaxws-tools:2.2.10'
+ext {
+    applicationDefaultJvmArgs = [
+            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+    ]
+}
 
 dependencies {
-    compile spring, jax
-    testCompile springTest
-    wsimport wsimportDependencies
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'javax.xml.ws:jaxws-api:2.2.11'
+    compile 'com.sun.xml.ws:jaxws-rt:2.2.10'
+    compile 'com.revinate:jaxws-spring:1.0.0'
+
+    wsimport 'com.sun.xml.ws:jaxws-tools:2.2.10'
 }
 
 bootRun { task ->
@@ -60,9 +56,9 @@ bootRun { task ->
 }
 
 task generateSources {
-    ext.wsdlFile = "src/main/resources/wsdl/DemoService.wsdl"
-    ext.wsdlLocation = "/wsdl/DemoService.wsdl"
-    ext.bindingDir = "src/main/resources/xjb"
+    ext.wsdlFile = "src/main/resources/demo/wsdl/DemoService.wsdl"
+    ext.wsdlLocation = "/demo/wsdl/DemoService.wsdl"
+    ext.bindingDir = "src/main/resources/demo/xjb"
 
     doLast {
         ant {
@@ -96,7 +92,3 @@ compileJava {
     dependsOn generateSources
     source generatedSourcesDir
 }
-
-applicationDefaultJvmArgs = [
-        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
-]
